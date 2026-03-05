@@ -33,3 +33,6 @@ go.work.sum
 
 # foundry's bin (when using "go build .")
 foundry
+
+# foundry project dir (used in testing)
+.foundry/
