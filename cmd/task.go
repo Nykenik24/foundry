@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/Nykenik24/foundry/core/task"
 	"github.com/Nykenik24/foundry/core/utils"
@@ -29,7 +30,7 @@ var taskNewCmd = &cobra.Command{
 	Short: "Creates a new task",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			log.Fatalf("Expected 1 arg (name) in 'task new', got %d", len(args))
+			log.Fatalf("Expected 1 arg (task's name) in 'task new', got %d", len(args))
 		}
 
 		if !utils.FileExists(".foundry") {
@@ -73,7 +74,7 @@ var taskRemoveCmd = &cobra.Command{
 	Short: "Remove a task",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			log.Fatalf("Expected 1 arg (name) in 'task remove', got %d", len(args))
+			log.Fatalf("Expected 1 arg (task's name) in 'task remove', got %d", len(args))
 		}
 
 		if !utils.FileExists(".foundry") {
@@ -112,10 +113,92 @@ var taskRemoveCmd = &cobra.Command{
 	},
 }
 
+var taskRunCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Run a task",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			log.Fatalf("Expected 1 arg (task's name), got %d", len(args))
+		}
+
+		if !utils.FileExists(".foundry") {
+			log.Fatalf("Not a foundry project")
+		}
+
+		if !utils.FileExists(".foundry/tasks.toml") {
+			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
+				log.Fatalf("Error when writing tasks document: %v", err)
+			}
+		}
+
+		taskSrc, err := os.ReadFile(".foundry/tasks.toml")
+		if err != nil {
+			log.Fatalf("Error when reading .foundry/tasks.toml: %v", err)
+		}
+
+		name := args[0]
+		tasks := task.RetrieveTasks(string(taskSrc))
+
+		if tasks.Tasks == nil {
+			tasks.Tasks = make(map[string]task.Task)
+		}
+
+		if _, exists := tasks.Tasks[name]; !exists {
+			log.Fatalf("Task '%s' doesn't exist", name)
+		}
+
+		cmdStr := exec.Command("sh", "-c", tasks.Tasks[name].Cmd)
+
+		cmdStr.Stdout = os.Stdout
+		cmdStr.Stderr = os.Stderr
+		cmdStr.Stdin = os.Stdin
+
+		err = cmdStr.Run()
+		if err != nil {
+			log.Printf("Error when running task: %v\n", err)
+			log.Fatalf("Command was '%s'", tasks.Tasks[name].Cmd)
+		}
+	},
+}
+
+var taskListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all tasks",
+	Run: func(cmd *cobra.Command, args []string) {
+		if !utils.FileExists(".foundry") {
+			log.Fatalf("Not a foundry project")
+		}
+
+		if !utils.FileExists(".foundry/tasks.toml") {
+			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
+				log.Fatalf("Error when writing tasks document: %v", err)
+			}
+		}
+
+		taskSrc, err := os.ReadFile(".foundry/tasks.toml")
+		if err != nil {
+			log.Fatalf("Error when reading .foundry/tasks.toml: %v", err)
+		}
+
+		tasks := task.RetrieveTasks(string(taskSrc))
+
+		if tasks.Tasks == nil {
+			tasks.Tasks = make(map[string]task.Task)
+		}
+
+		fmt.Printf("Found %d task(s)\n", len(tasks.Tasks))
+		for name, task := range tasks.Tasks {
+			fmt.Printf("└── Task \033[34m'%s'\033[0m: \033[32m%s\033[0m\n", name, task.Cmd)
+		}
+	},
+}
+
 func init() {
 	taskNewCmd.Flags().StringVar(&newTaskCommand, "cmd", "", "The command the task will have")
 
 	taskCmd.AddCommand(taskNewCmd)
 	taskCmd.AddCommand(taskRemoveCmd)
+	taskCmd.AddCommand(taskRunCmd)
+	taskCmd.AddCommand(taskListCmd)
 	rootCmd.AddCommand(taskCmd)
 }
