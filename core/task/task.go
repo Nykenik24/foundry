@@ -1,7 +1,7 @@
 package task
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -22,22 +22,22 @@ func NewTask(name, cmd string) *Task {
 	}
 }
 
-func TaskFromTOML(name, tomlSrc string) *Task {
+func TaskFromTOML(name, tomlSrc string) (*Task, error) {
 	var task Task
 	err := toml.Unmarshal([]byte(tomlSrc), &task)
 	if err != nil {
-		log.Fatalf("Error when unmarshaling task: %v", err)
+		return nil, fmt.Errorf("Error when unmarshaling task: %v", err)
 	}
 
-	return &task
+	return &task, nil
 }
 
-func RetrieveTasks(tomlDoc string) *TasksDocument {
+func RetrieveTasks(tomlDoc string) (*TasksDocument, error) {
 	var tasksDoc TasksDocument
 	err := toml.Unmarshal([]byte(tomlDoc), &tasksDoc)
 	if err != nil {
-		log.Fatalf("Error when unmarshaling task document: %v", err)
+		return nil, fmt.Errorf("Error when unmarshaling task document: %v", err)
 	}
 
-	return &tasksDoc
+	return &tasksDoc, nil
 }
