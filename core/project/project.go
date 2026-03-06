@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/Nykenik24/foundry/core/utils"
@@ -18,28 +17,28 @@ type Project struct {
 	Config   ProjectConfig
 }
 
-func NewProject(rootPath string) *Project {
+func NewProject(rootPath string) (*Project, error) {
 	if !utils.FileExists(fmt.Sprintf("%s/.foundry", rootPath)) {
-		log.Fatalf(".foundry not found in root directory '%s'\n", rootPath)
+		return nil, fmt.Errorf(".foundry not found in root directory '%s'\n", rootPath)
 	}
 
 	if !utils.FileExists(fmt.Sprintf("%s/.foundry/project.toml", rootPath)) {
-		log.Fatalf("project.toml not found in foundry dir '%s/.foundry'", rootPath)
+		return nil, fmt.Errorf("project.toml not found in foundry dir '%s/.foundry'\n", rootPath)
 	}
 
-	configBytes, err := os.ReadFile(fmt.Sprintf("%s/.foundry/project.toml", rootPath))
+	configBytes, err := os.ReadFile(fmt.Sprintf("%s/.foundry/project.toml\n", rootPath))
 	if err != nil {
-		log.Fatalf("Error when retrieving configuration: %v", err)
+		return nil, fmt.Errorf("Error when retrieving configuration: %v\n", err)
 	}
 
 	var conf ProjectConfig
 	err = toml.Unmarshal(configBytes, &conf)
 	if err != nil {
-		log.Fatalf("Error when unmarshaling configuration: %v", err)
+		return nil, fmt.Errorf("Error when unmarshaling configuration: %v\n", err)
 	}
 
 	return &Project{
 		RootPath: rootPath,
 		Config:   conf,
-	}
+	}, nil
 }
