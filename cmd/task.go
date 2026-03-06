@@ -143,7 +143,10 @@ var taskRunCmd = &cobra.Command{
 		}
 
 		name := args[0]
-		tasks := task.RetrieveTasks(string(taskSrc))
+		tasks, err := task.RetrieveTasks(string(taskSrc))
+		if err != nil {
+			utils.PrintFatal("%s", err.Error())
+		}
 
 		if tasks.Tasks == nil {
 			tasks.Tasks = make(map[string]task.Task)
@@ -186,7 +189,10 @@ var taskListCmd = &cobra.Command{
 			log.Fatalf("Error when reading .foundry/tasks.toml: %v", err)
 		}
 
-		tasks := task.RetrieveTasks(string(taskSrc))
+		tasks, err := task.RetrieveTasks(string(taskSrc))
+		if err != nil {
+			utils.PrintFatal("%s", err.Error())
+		}
 
 		if tasks.Tasks == nil {
 			tasks.Tasks = make(map[string]task.Task)
