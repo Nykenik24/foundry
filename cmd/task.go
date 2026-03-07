@@ -7,7 +7,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -170,14 +169,14 @@ var taskRunCmd = &cobra.Command{
 		err = cmdStr.Run()
 		os.Stdout.Write([]byte(stdout.String()))
 		os.Stderr.Write([]byte(stderr.String()))
+		cmdSuccess := true
 
 		if err != nil {
-			log.Printf("Error when running task: %v\n", err)
-			utils.PrintFatal("Command was '%s'", tasks.Tasks[name].Cmd)
+			cmdSuccess = false
+			utils.PrintError("Command was '%s'", tasks.Tasks[name].Cmd)
 		}
 
 		if targetTask.StoreRuns {
-			utils.GlobalLogger.Log(fmt.Sprintf("Storing %s's run", targetTask.Name), utils.LogInfo)
 			if !utils.PathExists(".foundry/runs") {
 				os.Mkdir(".foundry/runs", 0755)
 			}
@@ -187,16 +186,13 @@ var taskRunCmd = &cobra.Command{
 			runInfo := runs.RunInfo{
 				RanBy:   "task/" + targetTask.Name,
 				Logs:    taskLogs,
-				Success: true,
+				Success: cmdSuccess,
 			}
 
 			runToml, err := toml.Marshal(runInfo)
 			if err != nil {
 				utils.PrintFatal("Error when marshaling run: %v", err)
 			}
-
-			utils.GlobalLogger.Log(fmt.Sprintf("TOML for run: %s", string(runToml)), utils.LogInfo)
-			utils.GlobalLogger.Log(fmt.Sprintf("Name for run: %s.run", time.Now().Format(time.RFC3339)), utils.LogInfo)
 
 			err = os.WriteFile(fmt.Sprintf(".foundry/runs/%s.toml", time.Now().Format(time.RFC3339)), runToml, 0644)
 			if err != nil {

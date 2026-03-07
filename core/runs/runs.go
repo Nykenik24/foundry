@@ -73,7 +73,7 @@ func RetrieveRuns() []*Run {
 	return runs
 }
 
-func PrintRuns(runs []*Run, firstLine string) {
+func PrintRuns(runs []*Run, firstLine string, showLogs bool) {
 	fmt.Println(firstLine)
 
 	for i, run := range runs {
@@ -103,5 +103,17 @@ func PrintRuns(runs []*Run, firstLine string) {
 			run.Info.RanBy,
 			logN,
 		)
+		if showLogs {
+			for j, log := range run.Info.Logs {
+				if log != "" {
+					prefix := "    ├──"
+					if j == len(runs)-1 {
+						prefix = "    └──"
+					}
+
+					fmt.Printf("%s \033[32m%s\033[0m\n", prefix, log)
+				}
+			}
+		}
 	}
 }
