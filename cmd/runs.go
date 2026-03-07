@@ -74,9 +74,6 @@ var runsBeforeCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 
 	Short: "List runs before a timestamp.",
-	Long: `List runs before a timestamp.
-
-	Format for timestamp is YEAR-MONTH-DAY HOUR:MINUTE:SECOND`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ts, err := parseTimestamp(args[0])
 		if err != nil {
@@ -92,9 +89,6 @@ var runsAfterCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 
 	Short: "List runs after a timestamp.",
-	Long: `List runs after a timestamp.
-
-	Format for timestamp is YEAR-MONTH-DAY HOUR:MINUTE:SECOND`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ts, err := parseTimestamp(args[0])
 		if err != nil {
