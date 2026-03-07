@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # triggers on version tags like v1.2.3
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go: [1.26]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Build binary
+        run: |
+          mkdir -p dist/${{ matrix.os }}
+          GOOS=${{ matrix.os == 'windows-latest' && 'windows' || 'darwin' && 'darwin' || 'linux' }}
+          GOARCH=amd64
+          go build -o dist/${{ matrix.os }}/myapp
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload artifacts
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/${{ matrix.os }}/myapp
+          asset_name: myapp-${{ matrix.os }}-amd64
+          asset_content_type: application/octet-stream
