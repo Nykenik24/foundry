@@ -7,8 +7,9 @@ import (
 )
 
 type Task struct {
-	Name string `toml:"name"`
-	Cmd  string `toml:"cmd"`
+	Name      string `toml:"name"`
+	Cmd       string `toml:"cmd"`
+	StoreRuns bool   `toml:"store_runs"`
 }
 
 type TasksDocument struct {
@@ -17,8 +18,9 @@ type TasksDocument struct {
 
 func NewTask(name, cmd string) *Task {
 	return &Task{
-		Name: name,
-		Cmd:  cmd,
+		Name:      name,
+		Cmd:       cmd,
+		StoreRuns: false,
 	}
 }
 
