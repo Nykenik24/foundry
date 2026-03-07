@@ -18,11 +18,11 @@ type Project struct {
 }
 
 func NewProject(rootPath string) (*Project, error) {
-	if !utils.FileExists(fmt.Sprintf("%s/.foundry", rootPath)) {
+	if !utils.PathExists(fmt.Sprintf("%s/.foundry", rootPath)) {
 		return nil, fmt.Errorf(".foundry not found in root directory '%s'\n", rootPath)
 	}
 
-	if !utils.FileExists(fmt.Sprintf("%s/.foundry/project.toml", rootPath)) {
+	if !utils.PathExists(fmt.Sprintf("%s/.foundry/project.toml", rootPath)) {
 		return nil, fmt.Errorf("project.toml not found in foundry dir '%s/.foundry'\n", rootPath)
 	}
 

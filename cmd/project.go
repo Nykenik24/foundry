@@ -1,6 +1,7 @@
 /*
 Copyright © 2026 Luca A. <Nykenik24@proton.me>
 */
+
 package cmd
 
 import (
@@ -15,29 +16,27 @@ var projectCmd = &cobra.Command{
 	Use:   "project",
 	Short: "Manages projects",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("project called")
+		cmd.Usage()
 	},
 }
 
 var overwriteProject bool
 
 var projectInitCmd = &cobra.Command{
-	Use:   "init",
+	Use:  "init <name>",
+	Args: cobra.ExactArgs(1),
+
 	Short: "Initialize a new project",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			utils.PrintFatal("Expected 1 argument (project's name), got %d args", len(args))
-		}
-
 		name := args[0]
-		if !utils.FileExists(".foundry") {
+		if !utils.PathExists(".foundry") {
 			if err := os.Mkdir(".foundry", 0755); err != nil {
 				utils.PrintFatal("Failed to create .foundry directory: %v", err)
 			}
 		}
 		rawConf := fmt.Sprintf(`name = "%s"`, name)
 
-		if utils.FileExists(".foundry/project.toml") && !overwriteProject {
+		if utils.PathExists(".foundry/project.toml") && !overwriteProject {
 			utils.PrintFatal("Project already exists, consider removing .foundry/project.toml or using '--overwrite' (or '-o')")
 		} else {
 			// os.Create(".foundry/project.toml")

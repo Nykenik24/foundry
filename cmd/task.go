@@ -1,6 +1,7 @@
 /*
 Copyright © 2026 Luca A. <Nykenik24@proton.me>
 */
+
 package cmd
 
 import (
@@ -19,25 +20,23 @@ var taskCmd = &cobra.Command{
 	Use:   "task",
 	Short: "Manages tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("task called")
+		cmd.Usage()
 	},
 }
 
 var newTaskCommand string
 
 var taskNewCmd = &cobra.Command{
-	Use:   "new",
+	Use:  "new <name>",
+	Args: cobra.ExactArgs(1),
+
 	Short: "Creates a new task",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			utils.PrintFatal("Expected 1 arg (name) in 'task new', got %d", len(args))
-		}
-
-		if !utils.FileExists(".foundry") {
+		if !utils.PathExists(".foundry") {
 			utils.PrintFatal("Not a foundry project")
 		}
 
-		if !utils.FileExists(".foundry/tasks.toml") {
+		if !utils.PathExists(".foundry/tasks.toml") {
 			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
 				utils.PrintFatal("Error when writing tasks document: %v", err)
 			}
@@ -55,14 +54,14 @@ var taskNewCmd = &cobra.Command{
 		}
 
 		if tasks.Tasks == nil {
-			tasks.Tasks = make(map[string]task.Task)
+			tasks.Tasks = make(map[string]*task.Task)
 		}
 
 		if _, exists := tasks.Tasks[name]; exists {
 			utils.PrintFatal("Task '%s' already exists", name)
 		}
 
-		tasks.Tasks[name] = *task.NewTask(name, newTaskCommand)
+		tasks.Tasks[name] = task.NewTask(name, newTaskCommand)
 
 		newSrc, err := toml.Marshal(tasks)
 		if err != nil {
@@ -73,18 +72,16 @@ var taskNewCmd = &cobra.Command{
 }
 
 var taskRemoveCmd = &cobra.Command{
-	Use:   "remove",
+	Use:  "remove <name>",
+	Args: cobra.ExactArgs(1),
+
 	Short: "Remove a task",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			utils.PrintFatal("Expected 1 arg (name) in 'task remove', got %d", len(args))
-		}
-
-		if !utils.FileExists(".foundry") {
+		if !utils.PathExists(".foundry") {
 			utils.PrintFatal("Not a foundry project")
 		}
 
-		if !utils.FileExists(".foundry/tasks.toml") {
+		if !utils.PathExists(".foundry/tasks.toml") {
 			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
 				utils.PrintFatal("Error when writing tasks document: %v", err)
 			}
@@ -102,7 +99,7 @@ var taskRemoveCmd = &cobra.Command{
 		}
 
 		if tasks.Tasks == nil {
-			tasks.Tasks = make(map[string]task.Task)
+			tasks.Tasks = make(map[string]*task.Task)
 		}
 
 		if _, exists := tasks.Tasks[name]; !exists {
@@ -120,18 +117,16 @@ var taskRemoveCmd = &cobra.Command{
 }
 
 var taskRunCmd = &cobra.Command{
-	Use:   "run",
+	Use:  "run <name>",
+	Args: cobra.ExactArgs(1),
+
 	Short: "Run a task",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			log.Fatalf("Expected 1 arg (task's name), got %d", len(args))
-		}
-
-		if !utils.FileExists(".foundry") {
+		if !utils.PathExists(".foundry") {
 			log.Fatalf("Not a foundry project")
 		}
 
-		if !utils.FileExists(".foundry/tasks.toml") {
+		if !utils.PathExists(".foundry/tasks.toml") {
 			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
 				log.Fatalf("Error when writing tasks document: %v", err)
 			}
@@ -149,7 +144,7 @@ var taskRunCmd = &cobra.Command{
 		}
 
 		if tasks.Tasks == nil {
-			tasks.Tasks = make(map[string]task.Task)
+			tasks.Tasks = make(map[string]*task.Task)
 		}
 
 		if _, exists := tasks.Tasks[name]; !exists {
@@ -174,11 +169,11 @@ var taskListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !utils.FileExists(".foundry") {
+		if !utils.PathExists(".foundry") {
 			log.Fatalf("Not a foundry project")
 		}
 
-		if !utils.FileExists(".foundry/tasks.toml") {
+		if !utils.PathExists(".foundry/tasks.toml") {
 			if err := os.WriteFile(".foundry/tasks.toml", []byte(""), 0644); err != nil {
 				log.Fatalf("Error when writing tasks document: %v", err)
 			}
@@ -195,7 +190,7 @@ var taskListCmd = &cobra.Command{
 		}
 
 		if tasks.Tasks == nil {
-			tasks.Tasks = make(map[string]task.Task)
+			tasks.Tasks = make(map[string]*task.Task)
 		}
 
 		fmt.Printf("Found %d task(s)\n", len(tasks.Tasks))
