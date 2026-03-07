@@ -12,7 +12,7 @@ type Task struct {
 }
 
 type TasksDocument struct {
-	Tasks map[string]Task `toml:"tasks"`
+	Tasks map[string]*Task `toml:"tasks"`
 }
 
 func NewTask(name, cmd string) *Task {
