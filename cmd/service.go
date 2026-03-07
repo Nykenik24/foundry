@@ -85,6 +85,30 @@ func initManagerWithConfig() *service.ServiceManager {
 	return manager
 }
 
+func shutdownDaemon() {
+	conn, err := net.Dial("unix", "/tmp/foundry.sock")
+	if err != nil {
+		utils.PrintFatal("Could not connect to daemon: %v", err)
+	}
+	defer conn.Close()
+
+	req := service.Request{
+		Action: "shutdown",
+	}
+
+	if err := json.NewEncoder(conn).Encode(req); err != nil {
+		utils.PrintFatal("Failed to send shutdown: %v", err)
+	}
+
+	var resp service.Response
+	if err := json.NewDecoder(conn).Decode(&resp); err != nil {
+		utils.PrintFatal("Failed to read response: %v", err)
+	}
+
+	os.Remove("/tmp/foundry.sock")
+	utils.GlobalLogger.Log("Shutting daemon down...", utils.LogInfo)
+}
+
 var serviceCmd = &cobra.Command{
 	Use:   "service",
 	Short: "Manage services",
@@ -104,6 +128,7 @@ var serviceDaemonCmd = &cobra.Command{
 		daemon := service.NewDaemon(manager)
 		err := daemon.Run("/tmp/foundry.sock")
 		if err != nil {
+			shutdownDaemon()
 			utils.PrintFatal("%v", err)
 		}
 	},
@@ -216,27 +241,7 @@ var serviceKillCmd = &cobra.Command{
 	Use:   "dkill",
 	Short: "Stop the service daemon",
 	Run: func(cmd *cobra.Command, args []string) {
-		conn, err := net.Dial("unix", "/tmp/foundry.sock")
-		if err != nil {
-			utils.PrintFatal("Could not connect to daemon: %v", err)
-		}
-		defer conn.Close()
-
-		req := service.Request{
-			Action: "shutdown",
-		}
-
-		if err := json.NewEncoder(conn).Encode(req); err != nil {
-			utils.PrintFatal("Failed to send shutdown: %v", err)
-		}
-
-		var resp service.Response
-		if err := json.NewDecoder(conn).Decode(&resp); err != nil {
-			utils.PrintFatal("Failed to read response: %v", err)
-		}
-
-		os.Remove("/tmp/foundry.sock")
-		utils.GlobalLogger.Log("Shutting daemon down...", utils.LogInfo)
+		shutdownDaemon()
 	},
 }
 
